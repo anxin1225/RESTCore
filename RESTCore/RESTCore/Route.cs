@@ -9,15 +9,29 @@ namespace RESTCore
     /// </summary>
     public class RouteItemInfo
     {
+        private List<string> RuleItems = new List<string>();
+
         /// <summary>
         /// 路由名称
         /// </summary>
         public string RouteName { get; set; }
 
+        private string _RouteRule;
+
         /// <summary>
         /// 路由规则
         /// </summary>
-        public string RouteRule { get; set; }
+        public string RouteRule
+        {
+            get { return _RouteRule; }
+            set
+            {
+                _RouteRule = value;
+
+                RuleItems.Clear();
+                RuleItems.AddRange(value?.Split(new char[] { '/' }, StringSplitOptions.None));
+            }
+        }
 
         /// <summary>
         /// 默认路由信息
@@ -31,7 +45,37 @@ namespace RESTCore
         /// <returns></returns>
         public bool Matching(string key)
         {
-            return false;
+            if (RuleItems.Count == 0)
+                return false;
+
+            var key_items = key?.Split(new char[] { '/' }, StringSplitOptions.None);
+            if (key_items.Length != RuleItems.Count)
+                return false;
+
+            for (int i = 0; i < key_items.Length; i++)
+            {
+                var item = RuleItems[i];
+                
+                if (item.IndexOfAny(new char[] { '{', '}' }) < 0)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+
+            //foreach (var item in RuleItems)
+            //{
+            //    if (item.IndexOfAny(new char[] { '{', '}' }) < 0)
+            //    {
+            //        if (item.Equals())
+            //        {
+
+            //        }
+            //    }
+            //}
         }
     }
 
