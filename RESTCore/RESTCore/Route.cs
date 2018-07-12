@@ -23,6 +23,16 @@ namespace RESTCore
         /// 默认路由信息
         /// </summary>
         public dynamic DefaultRouteData { get; set; }
+
+        /// <summary>
+        /// 尝试匹配这条路由
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool Matching(string key)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -60,6 +70,7 @@ namespace RESTCore
     /// 路由导向
     /// </summary>
     public class Route<T>
+        where T : class
     {
         /// <summary>
         /// 路由对象信息
@@ -80,9 +91,19 @@ namespace RESTCore
             _RouteItemInfo.Add(routeinfo);
         }
 
-        //public T Matching()
-        //{
+        /// <summary>
+        /// 尝试匹配内容
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public T Matching(string key)
+        {
+            foreach (var item in _RouteItemInfo)
+            {
 
-        //}
+            }
+
+            return null;
+        }
     }
 }
