@@ -9,11 +9,13 @@ namespace RESTCore
     /// <summary>
     /// REST style service
     /// </summary>
-    public class RESTHttpService
+    public class HttpRESTService
     {
         public bool IsRuning { get; set; }
 
         public int Port { get; set; }
+
+        public HandleTunnel HandleTunnel { get; set; }
 
         private HttpListener _HttpListener = null;
 
@@ -53,10 +55,32 @@ namespace RESTCore
             var listener = (HttpListener)result.AsyncState;
             var context = listener.EndGetContext(result);
 
-            ThreadCurrentData.GetInstance().Set(context.Request);
-            ThreadCurrentData.GetInstance().Set(context.Response);
+            HttpContext.Request = context.Request;
+            HttpContext.Response = context.Response;
 
+            try { OnHttpRequest(); } catch { }
+        }
 
+        protected virtual void OnHttpRequest()
+        {
+            if (HandleTunnel == null)
+            {
+                using (HttpContext.Response.OutputStream)
+                {
+                    HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    var bytes = Encoding.UTF8.GetBytes($"not find {nameof(HandleTunnel)}");
+                    HttpContext.Response.OutputStream.Write(bytes, 0, bytes.Length);
+                }
+            }
+            else if (!HandleTunnel.Handle())
+            {
+                using (HttpContext.Response.OutputStream)
+                {
+                    HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    var bytes = Encoding.UTF8.GetBytes($"HandleTunnel can not hanlde");
+                    HttpContext.Response.OutputStream.Write(bytes, 0, bytes.Length);
+                }
+            }
         }
     }
 }

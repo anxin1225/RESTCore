@@ -1,4 +1,5 @@
 ﻿using System;
+using RESTCore;
 
 namespace RESTCoreConsle
 {
@@ -6,7 +7,12 @@ namespace RESTCoreConsle
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            HttpRESTService rest_service = new HttpRESTService
+            {
+                Port = 8099,
+            };
+
+            rest_service.Start();
         }
     }
 }
