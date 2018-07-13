@@ -7,7 +7,7 @@ namespace RESTCore
     /// <summary>
     /// 路由项信息
     /// </summary>
-    public class RouteItemInfo
+    public class RouteItemInfo<T>
     {
         private List<string> RuleItems = new List<string>();
 
@@ -34,17 +34,25 @@ namespace RESTCore
         }
 
         /// <summary>
+        /// Route Target
+        /// </summary>
+        public T Target { get; set; }
+
+        /// <summary>
         /// 默认路由信息
         /// </summary>
         public dynamic DefaultRouteData { get; set; }
 
         /// <summary>
-        /// 尝试匹配这条路由
+        /// try to maching route
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="routedata"></param>
         /// <returns></returns>
-        public bool Matching(string key)
+        public bool Matching(string key, out Dictionary<string, object> routedata)
         {
+            routedata = null;
+
             if (RuleItems.Count == 0)
                 return false;
 
@@ -52,102 +60,68 @@ namespace RESTCore
             if (key_items.Length != RuleItems.Count)
                 return false;
 
+            Dictionary<string, object> temp = new Dictionary<string, object>();
+
             for (int i = 0; i < key_items.Length; i++)
             {
-                var item = RuleItems[i];
-                
-                if (item.IndexOfAny(new char[] { '{', '}' }) < 0)
-                {
+                var rule_item = RuleItems[i];
+                var key_item = key_items[i];
 
+                if (rule_item.IndexOfAny(new char[] { '{', '}' }) < 0)
+                {
+                    if (string.Compare(rule_item, key_item, false) != 0)
+                        return false;
+                }
+                else if (rule_item.StartsWith('{') && rule_item.EndsWith('}'))
+                {
+                    temp[rule_item.Substring(1, rule_item.Length - 2)] = key_item;
+                    continue;
                 }
                 else
                 {
-
+                    throw new NotSupportedException(rule_item);
                 }
             }
 
-            //foreach (var item in RuleItems)
-            //{
-            //    if (item.IndexOfAny(new char[] { '{', '}' }) < 0)
-            //    {
-            //        if (item.Equals())
-            //        {
-
-            //        }
-            //    }
-            //}
+            routedata = temp;
+            return true;
         }
     }
 
-    /// <summary>
-    /// 路由目标信息
-    /// </summary>
-    public class RouteTargetInfo<T>
-    {
-        protected Dictionary<string, string> FormatDic = new Dictionary<string, string>();
-
-        public RouteTargetInfo() { }
-
-        public RouteTargetInfo(Dictionary<string, string> dic)
-        {
-            if (dic != null)
-                FormatDic = dic;
-        }
-
-        /// <summary>
-        /// 获取路由格式化信息
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public virtual string GetRouteFormatValue(string key)
-        {
-            return FormatDic.TryGetValue(key, out string value) ? value : null;
-        }
-
-        /// <summary>
-        /// 目标信息
-        /// </summary>
-        public T Target { get; set; }
-    }
-
-    /// <summary>
-    /// 路由导向
-    /// </summary>
     public class Route<T>
         where T : class
     {
-        /// <summary>
-        /// 路由对象信息
-        /// </summary>
-        private List<RouteItemInfo> _RouteItemInfo = new List<RouteItemInfo>();
+        private bool _InitFinsh = false;
 
-        /// <summary>
-        /// 路由目标信息
-        /// </summary>
-        private List<RouteTargetInfo<T>> _RouteTargetInfo = new List<RouteTargetInfo<T>>();
+        private List<RouteItemInfo<T>> _RouteItemInfo = new List<RouteItemInfo<T>>();
 
-        /// <summary>
-        /// 注册路由信息
-        /// </summary>
-        /// <param name="routeinfo"></param>
-        public void Register(RouteItemInfo routeinfo)
+        public void Register(RouteItemInfo<T> routeinfo)
         {
+            if (_InitFinsh)
+                throw new Exception("init is finshed can not add route item");
+
             _RouteItemInfo.Add(routeinfo);
         }
 
-        /// <summary>
-        /// 尝试匹配内容
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public T Matching(string key)
+        public T Matching(string key, out Dictionary<string, object> routedata)
         {
+            routedata = null;
+
+            if (!_InitFinsh)
+                _InitFinsh = true;
+
+            RouteItemInfo<T> _RouteItem = null;
             foreach (var item in _RouteItemInfo)
             {
-
+                if (item.Matching(key, out var rdata))
+                {
+                    _RouteItem = item;
+                    routedata = rdata;
+                    break;
+                }
             }
 
-            return null;
+            return _RouteItem?.Target;
         }
     }
 }
