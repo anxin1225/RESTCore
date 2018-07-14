@@ -24,49 +24,6 @@ namespace RESTCore
     }
 
     /// <summary>
-    /// 列表
-    /// </summary>
-    public class HandleTunnelList : List<HandleTunnel>
-    {
-        public new void Add(HandleTunnel tunnel)
-        {
-            base.Add(tunnel);
-
-            CardingList();
-        }
-
-        public bool Handle()
-        {
-            return this.FirstOrDefault()?.Handle() ?? false;
-        }
-
-        private void CardingList()
-        {
-            for (int i = 0; i < this.Count; i++)
-            {
-                var last = GetTunnel(i - 1);
-                var current = GetTunnel(i);
-
-                if (last != null)
-                    last.ChildTunnel = current;
-
-                current.ChildTunnel = null;
-            }
-        }
-
-        private HandleTunnel GetTunnel(int index)
-        {
-            if (index < 0)
-                return null;
-
-            if (index >= Count)
-                return null;
-
-            return this[index];
-        }
-    }
-
-    /// <summary>
     /// Http协议的隧道
     /// </summary>
     public class HttpHandleTunnel : HandleTunnel
