@@ -103,6 +103,14 @@ namespace RESTCore
             _RouteItemInfo.Add(routeinfo);
         }
 
+        public void Register(IEnumerable<RouteItemInfo<T>> list)
+        {
+            if (_InitFinsh)
+                throw new Exception("init is finshed can not add route item");
+
+            _RouteItemInfo.AddRange(list);
+        }
+
         public T Matching(string key, out Dictionary<string, object> routedata)
         {
             routedata = null;

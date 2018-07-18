@@ -121,7 +121,7 @@ namespace RESTCore
     /// <summary>
     /// 路由规则
     /// </summary>
-    public class APIHandleTunnel : HttpHandleTunnel
+    public class RouteHandleTunnel : HttpHandleTunnel
     {
         private Dictionary<string, string> HttpMethod2Method = new Dictionary<string, string>
         {
@@ -137,7 +137,7 @@ namespace RESTCore
 
         public override bool Handle()
         {
-            var source = Route.Matching(GetRouteKey(), out var routedata);
+            var source = Route?.Matching(GetRouteKey(), out var routedata);
 
             if (source == null)
                 throw new Exception($"not find Source for {GetRouteKey()}");
