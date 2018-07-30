@@ -18,24 +18,29 @@ namespace RESTCore
         public HandleTunnel HandleTunnel { get; set; }
 
         private HttpListener _HttpListener = null;
+        private Thread _MainThread = null;
 
         public void Start()
         {
+            _HttpListener = new HttpListener();
+
             _HttpListener.Prefixes.Add($"http://+:{Port}/");
 
             _HttpListener.Start();
 
-            new Thread(() =>
-            {
-                while (IsRuning)
-                {
-                    var result = _HttpListener.BeginGetContext(new AsyncCallback(HttpAsyncCallback), _HttpListener);
-                    result.AsyncWaitHandle.WaitOne();
-                }
-            })
+            _MainThread = new Thread(() =>
+           {
+               while (IsRuning)
+               {
+                   var result = _HttpListener.BeginGetContext(new AsyncCallback(HttpAsyncCallback), _HttpListener);
+                   result.AsyncWaitHandle.WaitOne();
+               }
+           })
             {
                 IsBackground = true
-            }.Start();
+            };
+
+            _MainThread.Start();
         }
 
         public void Stop()
@@ -81,6 +86,11 @@ namespace RESTCore
                     HttpContext.Response.OutputStream.Write(bytes, 0, bytes.Length);
                 }
             }
+        }
+
+        public void Join()
+        {
+
         }
     }
 }

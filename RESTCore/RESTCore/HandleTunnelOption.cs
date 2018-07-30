@@ -26,7 +26,9 @@ namespace RESTCore
                 var next = i + 1 < _HandleTunnel.Count ? _HandleTunnel[i + i] : null;
 
                 current.ChildTunnel = next;
-                next.ChildTunnel = null;
+
+                if (next != null)
+                    next.ChildTunnel = null;
             }
 
             return _HandleTunnel[0];

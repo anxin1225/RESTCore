@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MovieShopREST\MovieShopREST.csproj" />
     <ProjectReference Include="..\RESTCore\RESTCore.csproj" />
   </ItemGroup>
 </Project>
