@@ -1,77 +1,121 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace DataSource
 {
     public class MemoryDataSource<T> : IDataSource<T>
     {
-        private T _Data;
+        public MemoryDataSource()
+        {
+            SourceName = GetType().Name;
+        }
+
+        public virtual string SourceName { get; set; }
+
+        public virtual string SerializationFileName { get { return $"{SourceName}.txt"; } }
+
+        protected T Data { get; set; }
 
         public T Get()
         {
-            return _Data;
+            return Data;
         }
 
         public void Set(T data)
         {
-            _Data = data;
+            Data = data;
+        }
+
+        public virtual void Serialization()
+        {
+            using (StreamWriter sw = new StreamWriter(SerializationFileName))
+            {
+                sw.Write(JsonConvert.SerializeObject(Data));
+            }
+        }
+
+        public virtual void DeSerialization()
+        {
+            using (StreamReader sr = new StreamReader(SerializationFileName))
+            {
+                var tmp = JsonConvert.DeserializeObject<T>(sr.ReadToEnd());
+                if (tmp != null)
+                    Data = tmp;
+            }
         }
     }
 
-    public class MemoryListDataSource<T> : IListDataSource<T>
-        where T : IListDataItem
+    public class MemoryListDataSource<T> : MemoryDataSource<List<T>>, IListDataSource<T>
     {
-        private List<T> _ListData;
-
         public void Add(T data)
         {
-            throw new NotImplementedException();
-        }
-
-        public bool DaleteByPK(string pk)
-        {
-            throw new NotImplementedException();
+            lock (Data)
+                Data.Add(data);
         }
 
         public bool Delete(T data)
         {
-            throw new NotImplementedException();
+            lock (Data)
+                return Data.Remove(data);
         }
 
         public T FirstOrDefault(Func<T, bool> matching = null)
         {
-            throw new NotImplementedException();
-        }
-
-        public List<T> Get()
-        {
-            throw new NotImplementedException();
+            lock (Data)
+                return Data.FirstOrDefault(matching);
         }
 
         public List<T> GetAll(Func<T, bool> matching = null)
         {
-            throw new NotImplementedException();
-        }
-
-        public T GetByPK(string pk)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Set(List<T> data)
-        {
-            throw new NotImplementedException();
+            lock (Data)
+                return Data.Where(matching).ToList();
         }
 
         public List<T> Top(int count, Func<T, bool> matching = null)
         {
-            throw new NotImplementedException();
+            lock (Data)
+            {
+                List<T> temp = new List<T>();
+
+                int i = 0;
+                foreach (var item in Data)
+                {
+                    if (i > count)
+                        break;
+
+                    if (matching?.Invoke(item) ?? true)
+                    {
+                        temp.Add(item);
+                        ++i;
+                    }
+                }
+
+                return temp;
+            }
+        }
+    }
+
+    public class MemoryMappingDataSource<K, V> : MemoryListDataSource<KeyValuePair<K, V>>, IMappingDataSource<K, V>
+        where K : class
+        where V : class
+    {
+        public V GetValue(K key)
+        {
+            lock (Data)
+                return Data.FirstOrDefault(n => n.Key == key).Value;
         }
 
-        public bool Update(T data)
+        public void SetValue(K key, V value)
         {
-            throw new NotImplementedException();
+            lock (Data)
+            {
+                Data.RemoveAll(n => n.Key == key);
+                Data.Add(new KeyValuePair<K, V>(key, value));
+            }
         }
     }
 }
